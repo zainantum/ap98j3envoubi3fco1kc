@@ -23,7 +23,8 @@ from exorde_data import (
 
 import hashlib
 
-MAX_EXPIRATION_SECONDS = 180
+global MAX_EXPIRATION_SECONDS 
+MAX_EXPIRATION_SECONDS = 60
 
 
 async def generate_url(keyword: str = "BTC"):
@@ -150,8 +151,39 @@ async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
                 ):
                     yield item
 
+DEFAULT_OLDNESS_SECONDS = 30
+DEFAULT_MAXIMUM_ITEMS = 15
+DEFAULT_MIN_POST_LENGTH = 10
+
+def read_parameters(parameters):
+    # Check if parameters is not empty or None
+    if parameters and isinstance(parameters, dict):
+        try:
+            max_oldness_seconds = parameters.get("max_oldness_seconds", DEFAULT_OLDNESS_SECONDS)
+        except KeyError:
+            max_oldness_seconds = DEFAULT_OLDNESS_SECONDS
+
+        try:
+            maximum_items_to_collect = parameters.get("maximum_items_to_collect", DEFAULT_MAXIMUM_ITEMS)
+        except KeyError:
+            maximum_items_to_collect = DEFAULT_MAXIMUM_ITEMS
+
+        try:
+            min_post_length = parameters.get("min_post_length", DEFAULT_MIN_POST_LENGTH)
+        except KeyError:
+            min_post_length = DEFAULT_MIN_POST_LENGTH
+    else:
+        # Assign default values if parameters is empty or None
+        max_oldness_seconds = DEFAULT_OLDNESS_SECONDS
+        maximum_items_to_collect = DEFAULT_MAXIMUM_ITEMS
+        min_post_length = DEFAULT_MIN_POST_LENGTH
+
+    return max_oldness_seconds, maximum_items_to_collect, min_post_length
 
 async def query(parameters: dict) -> AsyncGenerator[Item, None]:
+    global MAX_EXPIRATION_SECONDS
+    max_oldness_seconds, MAXIMUM_ITEMS_TO_COLLECT, min_post_length = read_parameters(parameters)
+    MAX_EXPIRATION_SECONDS = max_oldness_seconds
     url = await generate_url(**parameters["url_parameters"])
     logging.info("[Reddit] Scraping %s", url)
     if "reddit.com" not in url:
