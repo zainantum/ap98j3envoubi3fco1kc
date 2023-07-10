@@ -228,7 +228,8 @@ async def generate_url(autonomous_subreddit_choice=0.33, keyword: str = "BTC"):
     random_value = random.random()
     if random_value < autonomous_subreddit_choice:
         return await find_random_subreddit_for_keyword(keyword)
-    else:
+    else:        
+        logging.info("[Reddit] Top 100 Subreddits mode!")
         return "https://reddit.com/" + random.choice(subreddits)
 
 
@@ -373,7 +374,7 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     url = await generate_url(**parameters["url_parameters"])
     logging.info("[Reddit] Scraping %s", url)
     if "reddit.com" not in url:
-        raise ValueError(f"Not a reddit URL {url}")
+        raise ValueError(f"Not a Reddit URL {url}")
     url_parameters = url.split("reddit.com")[1].split("/")[1:]
     if "comments" in url_parameters:
         async for result in scrap_post(url):
