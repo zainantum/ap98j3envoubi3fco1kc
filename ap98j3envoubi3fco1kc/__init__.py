@@ -82,7 +82,7 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
             ),
             title=Title(content["title"]),
             domain=Domain("reddit.com"),
-            url=Url(content["url"]),
+            url=Url("https://reddit.com" + content["url"]),
         )
         if is_within_timeframe_seconds(
             content["created_utc"], MAX_EXPIRATION_SECONDS
@@ -115,7 +115,7 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
             yield Item()
 
     async def kind(data) -> AsyncGenerator[Item, None]:
-        resolver = resolvers.get(data["kind"], None)
+        resolver = resolvers.get(data.get("kind", None), None)
         if not resolver:
             raise NotImplementedError(f"{data['kind']} is not implemented")
         try:
