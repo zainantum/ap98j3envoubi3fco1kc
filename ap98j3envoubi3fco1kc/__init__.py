@@ -228,7 +228,7 @@ async def generate_url(autonomous_subreddit_choice=0.33, keyword: str = "BTC"):
     if random_value < autonomous_subreddit_choice:
         return await find_random_subreddit_for_keyword(keyword)
     else:
-        return "https://reddit.com" + random.choice(subreddits)
+        return "https://reddit.com/" + random.choice(subreddits)
 
 
 def is_within_timeframe_seconds(input_timestamp, timeframe_sec):
