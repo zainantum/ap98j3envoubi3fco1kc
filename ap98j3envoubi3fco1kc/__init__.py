@@ -115,7 +115,9 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
             yield Item()
 
     async def kind(data) -> AsyncGenerator[Item, None]:
-        resolver = resolvers.get(data.get("kind", None), None)
+        if not isinstance(data, dict):
+            return
+        resolver = resolvers.get(data["kind"], None)
         if not resolver:
             raise NotImplementedError(f"{data['kind']} is not implemented")
         try:
