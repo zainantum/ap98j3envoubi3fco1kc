@@ -23,7 +23,7 @@ from exorde_data import (
 
 import hashlib
 
-global MAX_EXPIRATION_SECONDS 
+global MAX_EXPIRATION_SECONDS
 MAX_EXPIRATION_SECONDS = 60
 
 subreddits = [
@@ -220,7 +220,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
                 for url in tree.xpath('//a[contains(@href, "/r/")]//@href')
                 if not "/r/popular" in url
             ]
-            result = f"https://old.reddit.com{random.choice(urls)}new"
+            result = f"https://old.reddit.com{random.choice(urls)}/new"
             return result
 
 
@@ -228,7 +228,7 @@ async def generate_url(autonomous_subreddit_choice=0.33, keyword: str = "BTC"):
     random_value = random.random()
     if random_value < autonomous_subreddit_choice:
         return await find_random_subreddit_for_keyword(keyword)
-    else:        
+    else:
         logging.info("[Reddit] Top 100 Subreddits mode!")
         return "https://reddit.com/" + random.choice(subreddits)
 
@@ -252,6 +252,7 @@ def format_timestamp(timestamp):
 
 async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
     resolvers = {}
+    print(url)
 
     async def post(data) -> AsyncGenerator[Item, None]:
         """t3"""
@@ -333,30 +334,40 @@ async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
             html_content = await response.text()
             html_tree = fromstring(html_content)
             for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
+                print(post)
                 async for item in scrap_post(
-                    post.xpath("div/ul/li/a")[0].get("href")
+                    "https://reddit.com" + post.xpath("div/*/a")[0].get("href")
                 ):
+                    print(item)
                     yield item
+
 
 DEFAULT_OLDNESS_SECONDS = 30
 DEFAULT_MAXIMUM_ITEMS = 15
 DEFAULT_MIN_POST_LENGTH = 10
 
+
 def read_parameters(parameters):
     # Check if parameters is not empty or None
     if parameters and isinstance(parameters, dict):
         try:
-            max_oldness_seconds = parameters.get("max_oldness_seconds", DEFAULT_OLDNESS_SECONDS)
+            max_oldness_seconds = parameters.get(
+                "max_oldness_seconds", DEFAULT_OLDNESS_SECONDS
+            )
         except KeyError:
             max_oldness_seconds = DEFAULT_OLDNESS_SECONDS
 
         try:
-            maximum_items_to_collect = parameters.get("maximum_items_to_collect", DEFAULT_MAXIMUM_ITEMS)
+            maximum_items_to_collect = parameters.get(
+                "maximum_items_to_collect", DEFAULT_MAXIMUM_ITEMS
+            )
         except KeyError:
             maximum_items_to_collect = DEFAULT_MAXIMUM_ITEMS
 
         try:
-            min_post_length = parameters.get("min_post_length", DEFAULT_MIN_POST_LENGTH)
+            min_post_length = parameters.get(
+                "min_post_length", DEFAULT_MIN_POST_LENGTH
+            )
         except KeyError:
             min_post_length = DEFAULT_MIN_POST_LENGTH
     else:
@@ -367,15 +378,22 @@ def read_parameters(parameters):
 
     return max_oldness_seconds, maximum_items_to_collect, min_post_length
 
+
 async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     global MAX_EXPIRATION_SECONDS
-    max_oldness_seconds, MAXIMUM_ITEMS_TO_COLLECT, min_post_length = read_parameters(parameters)
+    (
+        max_oldness_seconds,
+        MAXIMUM_ITEMS_TO_COLLECT,
+        min_post_length,
+    ) = read_parameters(parameters)
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     url = await generate_url(**parameters["url_parameters"])
+    print(url)
     logging.info("[Reddit] Scraping %s", url)
     if "reddit.com" not in url:
         raise ValueError(f"Not a Reddit URL {url}")
     url_parameters = url.split("reddit.com")[1].split("/")[1:]
+    print(url_parameters)
     if "comments" in url_parameters:
         async for result in scrap_post(url):
             logging.info("[Reddit] found post = %s", result)
