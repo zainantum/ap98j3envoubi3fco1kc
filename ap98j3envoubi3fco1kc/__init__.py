@@ -327,16 +327,23 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
             async for commentary in kind(comments):
                 yield commentary
 
-
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
     async with aiohttp.ClientSession() as session:
-        async with session.get(subreddit_url) as response:
+        url_to_fetch = subreddit_url
+        async with session.get(url_to_fetch) as response:
             html_content = await response.text()
             html_tree = fromstring(html_content)
-            for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
-                print(post)
+            for post in html_tree.xpath("//div[@data-testid='post-container']"):
+                sublinks = post.xpath(".//a[starts-with(@href, '/r/')]/@href")
+                sublink = list(set(sublinks))
+                sublink_found = None
+                for sublink in sublinks:
+                    if "comments" in sublink:
+                        sublink_found = sublink
+                        break
+                subreddit_scrap_URL = "https://reddit.com" + sublink_found
                 async for item in scrap_post(
-                    "https://reddit.com" + post.xpath("div/*/a")[0].get("href")
+                    subreddit_scrap_URL
                 ):
                     print(item)
                     yield item
