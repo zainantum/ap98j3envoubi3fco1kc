@@ -252,7 +252,6 @@ def format_timestamp(timestamp):
 
 async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
     resolvers = {}
-    print(url)
 
     async def post(data) -> AsyncGenerator[Item, None]:
         """t3"""
@@ -345,7 +344,6 @@ async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
                 async for item in scrap_post(
                     subreddit_scrap_URL
                 ):
-                    print(item)
                     yield item
 
 
@@ -395,12 +393,10 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     ) = read_parameters(parameters)
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     url = await generate_url(**parameters["url_parameters"])
-    print(url)
     logging.info("[Reddit] Scraping %s", url)
     if "reddit.com" not in url:
         raise ValueError(f"Not a Reddit URL {url}")
     url_parameters = url.split("reddit.com")[1].split("/")[1:]
-    print(url_parameters)
     if "comments" in url_parameters:
         async for result in scrap_post(url):
             logging.info("[Reddit] found post = %s", result)
