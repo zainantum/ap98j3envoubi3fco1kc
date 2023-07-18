@@ -324,8 +324,8 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                     yield result
                 async for commentary in kind(comments):
                     yield commentary
-    except Exception as err:
-        logging.exception(f"An error occured while fetching {url}")
+    except Exception:
+        pass
 
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
     async with aiohttp.ClientSession() as session:
