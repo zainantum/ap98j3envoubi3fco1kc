@@ -327,10 +327,10 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
     except Exception as err:
         logging.exception(f"An error occured while fetching {url}")
 
-
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
     async with aiohttp.ClientSession() as session:
-        async with session.get(subreddit_url) as response:
+        url_to_fetch = subreddit_url
+        async with session.get(url_to_fetch) as response:
             html_content = await response.text()
             html_tree = fromstring(html_content)
             for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
@@ -340,6 +340,7 @@ async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
                 if ".jpg" not in url:
                     async for item in scrap_post(url):
                         yield item
+
 
 
 DEFAULT_OLDNESS_SECONDS = 30
