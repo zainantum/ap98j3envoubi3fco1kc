@@ -2,11 +2,9 @@ import random
 import aiohttp
 from lxml import html
 from typing import AsyncGenerator
-import datetime
 import time
 from datetime import datetime as datett
 from datetime import timezone
-import pytz
 import hashlib
 import logging
 from lxml.html import fromstring
@@ -318,13 +316,16 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                 yield item
 
     resolvers = {"Listing": listing, "t1": comment, "t3": post, "more": more}
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url + ".json") as response:
-            [post, comments] = await response.json()
-            async for result in kind(post):
-                yield result
-            async for commentary in kind(comments):
-                yield commentary
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url + ".json") as response:
+                [post, comments] = await response.json()
+                async for result in kind(post):
+                    yield result
+                async for commentary in kind(comments):
+                    yield commentary
+    except Exception as err:
+        logging.exception(f"An error occured while fetching {url}")
 
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
     async with aiohttp.ClientSession() as session:
@@ -332,19 +333,14 @@ async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
         async with session.get(url_to_fetch) as response:
             html_content = await response.text()
             html_tree = fromstring(html_content)
-            for post in html_tree.xpath("//div[@data-testid='post-container']"):
-                sublinks = post.xpath(".//a[starts-with(@href, '/r/')]/@href")
-                sublink = list(set(sublinks))
-                sublink_found = None
-                for sublink in sublinks:
-                    if "comments" in sublink:
-                        sublink_found = sublink
-                        break
-                subreddit_scrap_URL = "https://reddit.com" + sublink_found
-                async for item in scrap_post(
-                    subreddit_scrap_URL
-                ):
-                    yield item
+            for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
+                url = "https://reddit.com" + post.xpath("div/*/a")[0].get(
+                    "href"
+                )
+                if ".jpg" not in url:
+                    async for item in scrap_post(url):
+                        yield item
+
 
 
 DEFAULT_OLDNESS_SECONDS = 30
