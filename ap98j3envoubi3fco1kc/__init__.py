@@ -2,11 +2,9 @@ import random
 import aiohttp
 from lxml import html
 from typing import AsyncGenerator
-import datetime
 import time
 from datetime import datetime as datett
 from datetime import timezone
-import pytz
 import hashlib
 import logging
 from lxml.html import fromstring
@@ -252,7 +250,6 @@ def format_timestamp(timestamp):
 
 async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
     resolvers = {}
-    print(url)
 
     async def post(data) -> AsyncGenerator[Item, None]:
         """t3"""
@@ -319,13 +316,16 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                 yield item
 
     resolvers = {"Listing": listing, "t1": comment, "t3": post, "more": more}
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url + ".json") as response:
-            [post, comments] = await response.json()
-            async for result in kind(post):
-                yield result
-            async for commentary in kind(comments):
-                yield commentary
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(url + ".json") as response:
+                [post, comments] = await response.json()
+                async for result in kind(post):
+                    yield result
+                async for commentary in kind(comments):
+                    yield commentary
+    except Exception as err:
+        logging.exception(f"An error occured while fetching {url}")
 
 
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
@@ -334,12 +334,12 @@ async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
             html_content = await response.text()
             html_tree = fromstring(html_content)
             for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
-                print(post)
-                async for item in scrap_post(
-                    "https://reddit.com" + post.xpath("div/*/a")[0].get("href")
-                ):
-                    print(item)
-                    yield item
+                url = "https://reddit.com" + post.xpath("div/*/a")[0].get(
+                    "href"
+                )
+                if ".jpg" not in url:
+                    async for item in scrap_post(url):
+                        yield item
 
 
 DEFAULT_OLDNESS_SECONDS = 30
@@ -388,12 +388,10 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     ) = read_parameters(parameters)
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     url = await generate_url(**parameters["url_parameters"])
-    print(url)
     logging.info("[Reddit] Scraping %s", url)
     if "reddit.com" not in url:
         raise ValueError(f"Not a Reddit URL {url}")
     url_parameters = url.split("reddit.com")[1].split("/")[1:]
-    print(url_parameters)
     if "comments" in url_parameters:
         async for result in scrap_post(url):
             logging.info("[Reddit] found post = %s", result)
