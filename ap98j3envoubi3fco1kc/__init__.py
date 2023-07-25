@@ -24,6 +24,17 @@ import hashlib
 global MAX_EXPIRATION_SECONDS
 MAX_EXPIRATION_SECONDS = 60
 
+USER_AGENT_LIST = [
+    'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15',
+    'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'
+]
+
 subreddits = [
     "r/AlgorandOfficial",
     "r/almosthomeless",
@@ -207,9 +218,12 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     It randomly chooses one of the resulting subreddit.
     """
     logging.info("[Pre-collect] generating Reddit target URL.")
-    async with aiohttp.ClientSession() as session:
+    timeout=aiohttp.ClientTimeout(total=25)
+    headers={'User-Agent': random.choice(USER_AGENT_LIST)}
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         async with session.get(
-            f"https://www.reddit.com/search/?q={keyword}&type=sr"
+            f"https://www.reddit.com/search/?q={keyword}&type=sr", 
+            headers=headers
         ) as response:
             html_content = await response.text()
             tree = html.fromstring(html_content)
@@ -316,9 +330,11 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                 yield item
 
     resolvers = {"Listing": listing, "t1": comment, "t3": post, "more": more}
-    try:
-        async with aiohttp.ClientSession() as session:
-            async with session.get(url + ".json") as response:
+    try:        
+        timeout=aiohttp.ClientTimeout(total=25)
+        headers={'User-Agent': random.choice(USER_AGENT_LIST)}
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.get(url + ".json", headers=headers) as response:
                 [post, comments] = await response.json()
                 async for result in kind(post):
                     yield result
@@ -328,9 +344,11 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
         pass
 
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
-    async with aiohttp.ClientSession() as session:
+    timeout=aiohttp.ClientTimeout(total=25)
+    headers={'User-Agent': random.choice(USER_AGENT_LIST)}
+    async with aiohttp.ClientSession(timeout=timeout) as session:
         url_to_fetch = subreddit_url
-        async with session.get(url_to_fetch) as response:
+        async with session.get(url_to_fetch, headers=headers) as response:
             html_content = await response.text()
             html_tree = fromstring(html_content)
             for post in html_tree.xpath("//div[@data-testid='post-container']"):
