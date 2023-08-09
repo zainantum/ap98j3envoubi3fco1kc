@@ -1,5 +1,6 @@
 import random
 import aiohttp
+import asyncio
 from lxml import html
 from typing import AsyncGenerator
 import time
@@ -22,18 +23,7 @@ from exorde_data import (
 import hashlib
 
 global MAX_EXPIRATION_SECONDS
-MAX_EXPIRATION_SECONDS = 60
-
-USER_AGENT_LIST = [
-    'Mozilla/5.0 (iPad; CPU OS 12_2 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Mobile/15E148',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/109.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/108.0.0.0 Safari/537.36',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15',
-    'Mozilla/5.0 (Macintosh; Intel Mac OS X 13_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/16.1 Safari/605.1.15'
-]
+MAX_EXPIRATION_SECONDS = 3600
 
 subreddits = [
     "r/AlgorandOfficial",
@@ -209,6 +199,52 @@ subreddits = [
     "r/worldnews",
     "r/worldnews",
     "r/worldnews",
+    ###
+    "r/BaldursGate3",
+    "r/teenagers",
+    "r/BigBrother",
+    "r/BigBrother",
+    "r/BigBrother",
+    "r/wallstreetbets",
+    "r/wallstreetbets",
+    "r/namenerds",
+    "r/Eldenring",
+    "r/Unexpected",
+    "r/NonCredibleDefense",
+    "r/wallstreetbets",
+    "r/news",
+    "r/news",
+    "r/news",
+    "r/mildlyinteresting",  
+    "r/RandomThoughts",
+    "r/ireland",
+    "r/france",
+    "r/ireland",
+    "r/de",
+    "r/ireland",
+    "r/unitedkingdom", "r/AskUK", "r/CasualUK", "r/britishproblems",
+    "r/canada", "r/AskCanada", "r/onguardforthee", "r/CanadaPolitics",
+    "r/australia", "r/AskAnAustralian", "r/straya", "r/sydney",
+    "r/india", "r/AskIndia", "r/bollywood", "r/Cricket",
+    "r/germany", "r/de", "r/LearnGerman", "r/germusic",
+    "r/france", "r/French", "r/paris", "r/europe",
+    "r/japan", "r/japanlife", "r/newsokur", "r/learnjapanese",
+    "r/brasil", "r/brasilivre", "r/riodejaneiro", "r/saopaulo",
+    "r/mexico", "r/MexicoCity", "r/spanish", "r/yo_espanol",
+    # 50 Most Popular News, Politics, and Finance/Economics Subreddits
+    "r/news", "r/worldnews", "r/UpliftingNews", "r/nottheonion", "r/TrueReddit",
+    "r/politics", "r/PoliticalDiscussion", "r/worldpolitics", "r/neutralpolitics", "r/Ask_Politics",
+    "r/personalfinance", "r/investing", "r/StockMarket", "r/financialindependence", "r/economics",
+    # 50 Simply Relevant/Popular Subreddits
+    "r/AskReddit", "r/IAmA", "r/funny", "r/pics", "r/gaming", "r/aww", "r/todayilearned",
+    "r/science", "r/technology", "r/worldnews", "r/Showerthoughts", "r/books", "r/movies",
+    "r/Music", "r/Art", "r/history", "r/EarthPorn", "r/food", "r/travel", "r/fitness", "r/DIY",
+    "r/LifeProTips", "r/explainlikeimfive", "r/dataisbeautiful", "r/futurology", "r/WritingPrompts",
+    "r/nosleep", "r/personalfinance", "r/photography", "r/NatureIsFuckingLit", "r/Advice",
+    "r/askscience", "r/gadgets", "r/funny", "r/pics", "r/gaming", "r/aww", "r/todayilearned",
+    "r/science", "r/technology", "r/worldnews", "r/Showerthoughts", "r/books", "r/movies",
+    "r/Music", "r/Art", "r/history", "r/EarthPorn", "r/food", "r/travel", "r/fitness", "r/DIY",
+    "r/LifeProTips", "r/explainlikeimfive", "r/dataisbeautiful", "r/futurology", "r/WritingPrompts"
 ]
 
 
@@ -218,12 +254,9 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     It randomly chooses one of the resulting subreddit.
     """
     logging.info("[Pre-collect] generating Reddit target URL.")
-    timeout=aiohttp.ClientTimeout(total=25)
-    headers={'User-Agent': random.choice(USER_AGENT_LIST)}
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with aiohttp.ClientSession() as session:
         async with session.get(
-            f"https://www.reddit.com/search/?q={keyword}&type=sr", 
-            headers=headers
+            f"https://www.reddit.com/search/?q={keyword}&type=sr"
         ) as response:
             html_content = await response.text()
             tree = html.fromstring(html_content)
@@ -236,7 +269,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
             return result
 
 
-async def generate_url(autonomous_subreddit_choice=0.5, keyword: str = "BTC"):
+async def generate_url(autonomous_subreddit_choice=0.33, keyword: str = "BTC"):
     random_value = random.random()
     if random_value < autonomous_subreddit_choice:
         return await find_random_subreddit_for_keyword(keyword)
@@ -330,43 +363,46 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                 yield item
 
     resolvers = {"Listing": listing, "t1": comment, "t3": post, "more": more}
-    try:        
-        timeout=aiohttp.ClientTimeout(total=25)
-        headers={'User-Agent': random.choice(USER_AGENT_LIST)}
-        async with aiohttp.ClientSession(timeout=timeout) as session:
-            async with session.get(url + ".json", headers=headers) as response:
-                [post, comments] = await response.json()
-                async for result in kind(post):
-                    yield result
-                async for commentary in kind(comments):
-                    yield commentary
-    except Exception:
-        pass
+    async with aiohttp.ClientSession() as session:
+        _url = url + ".json"
+        logging.info(f"getting {_url}")
+        async with session.get(_url) as response:
+            response = await response.json()
+            [_post, comments] = response
+            try:
+                async for item in kind(_post):
+                    yield (item)
+            except:
+                logging.exception(f"An error occured on {_url}")
+
+            try:
+                for result in comments["data"]["children"]:
+                    async for item in kind(result):
+                        yield (item)
+            except:
+                logging.exception(f"An error occured on {_url}")
+
 
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
-    timeout=aiohttp.ClientTimeout(total=25)
-    headers={'User-Agent': random.choice(USER_AGENT_LIST)}
-    async with aiohttp.ClientSession(timeout=timeout) as session:
+    async with aiohttp.ClientSession() as session:
         url_to_fetch = subreddit_url
-        async with session.get(url_to_fetch, headers=headers) as response:
+        async with session.get(url_to_fetch) as response:
             html_content = await response.text()
             html_tree = fromstring(html_content)
-            for post in html_tree.xpath("//div[@data-testid='post-container']"):
-                sublinks = post.xpath(".//a[starts-with(@href, '/r/')]/@href")
-                sublink = list(set(sublinks))
-                sublink_found = None
-                for sublink in sublinks:
-                    if "comments" in sublink:
-                        sublink_found = sublink
-                        break
-                subreddit_scrap_URL = "https://reddit.com" + sublink_found
-                async for item in scrap_post(
-                    subreddit_scrap_URL
-                ):
-                    yield item
+            for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
+                url = post.xpath("div/*/a")[0].get("href")
+                await asyncio.sleep(1)
+                if "https" not in url:
+                    try:
+                        async for item in scrap_post(
+                            f"https://reddit.com{url}"
+                        ):
+                            yield item
+                    except Exception:
+                        pass
 
 
-DEFAULT_OLDNESS_SECONDS = 30
+DEFAULT_OLDNESS_SECONDS = 6000
 DEFAULT_MAXIMUM_ITEMS = 15
 DEFAULT_MIN_POST_LENGTH = 10
 
@@ -412,15 +448,22 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     ) = read_parameters(parameters)
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     url = await generate_url(**parameters["url_parameters"])
+    yielded_items = 0  # Counter for the number of yielded items
     logging.info("[Reddit] Scraping %s", url)
     if "reddit.com" not in url:
         raise ValueError(f"Not a Reddit URL {url}")
     url_parameters = url.split("reddit.com")[1].split("/")[1:]
     if "comments" in url_parameters:
         async for result in scrap_post(url):
-            logging.info("[Reddit] found post = %s", result)
+            logging.info(f"[REDDIT] Found Reddit post: {result}")
+            yielded_items += 1
             yield result
+            if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
+                break
     else:
         async for result in scrap_subreddit(url):
-            logging.info("[Reddit] found post = %s", result)
+            logging.info(f"[REDDIT] Found Reddit comment: {result}")
+            yielded_items += 1
             yield result
+            if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
+                break
