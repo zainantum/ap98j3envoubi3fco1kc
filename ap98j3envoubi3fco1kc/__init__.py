@@ -24,6 +24,7 @@ import hashlib
 
 global MAX_EXPIRATION_SECONDS
 MAX_EXPIRATION_SECONDS = 3600
+BASE_TIMEOUT = 30
 
 subreddits = [
     "r/AlgorandOfficial",
@@ -36,6 +37,9 @@ subreddits = [
     "r/announcements",
     "r/announcements",
     "r/antiwork",
+    "r/AskReddit",
+    "r/AskReddit",
+    "r/AskReddit",
     "r/AskReddit",
     "r/AskReddit",
     "r/AskReddit",
@@ -253,20 +257,24 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     Generate a subreddit URL using the search tool with `keyword`.
     It randomly chooses one of the resulting subreddit.
     """
-    logging.info("[Pre-collect] generating Reddit target URL.")
-    async with aiohttp.ClientSession() as session:
-        async with session.get(
-            f"https://www.reddit.com/search/?q={keyword}&type=sr"
-        ) as response:
-            html_content = await response.text()
-            tree = html.fromstring(html_content)
-            urls = [
-                url
-                for url in tree.xpath('//a[contains(@href, "/r/")]//@href')
-                if not "/r/popular" in url
-            ]
-            result = f"https://old.reddit.com{random.choice(urls)}/new"
-            return result
+    logging.info("[Reddit] generating subreddit target URL.")
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                f"https://www.reddit.com/search/?q={keyword}&type=sr",
+                timeout = BASE_TIMEOUT
+            ) as response:
+                html_content = await response.text()
+                tree = html.fromstring(html_content)
+                urls = [
+                    url
+                    for url in tree.xpath('//a[contains(@href, "/r/")]//@href')
+                    if not "/r/popular" in url
+                ]
+                result = f"https://old.reddit.com{random.choice(urls)}/new"
+                return result
+    finally:
+        await session.close()
 
 
 async def generate_url(autonomous_subreddit_choice=0.33, keyword: str = "BTC"):
@@ -363,49 +371,56 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                 yield item
 
     resolvers = {"Listing": listing, "t1": comment, "t3": post, "more": more}
-    async with aiohttp.ClientSession() as session:
-        _url = url + ".json"
-        logging.info(f"getting {_url}")
-        async with session.get(_url) as response:
-            response = await response.json()
-            [_post, comments] = response
-            try:
-                async for item in kind(_post):
-                    yield (item)
-            except:
-                logging.exception(f"An error occured on {_url}")
-
-            try:
-                for result in comments["data"]["children"]:
-                    async for item in kind(result):
+    try:
+        async with aiohttp.ClientSession() as session:
+            _url = url + ".json"
+            logging.info(f"[Reddit] Scraping - getting {_url}")
+            async with session.get(_url, timeout=BASE_TIMEOUT) as response:
+                response = await response.json()
+                [_post, comments] = response
+                try:
+                    async for item in kind(_post):
                         yield (item)
-            except:
-                logging.exception(f"An error occured on {_url}")
+                except:
+                    logging.exception(f"An error occured on {_url}")
+
+                try:
+                    for result in comments["data"]["children"]:
+                        async for item in kind(result):
+                            yield (item)
+                except:
+                    logging.exception(f"An error occured on {_url}")
+    finally:
+        await session.close()
 
 
 async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
-    async with aiohttp.ClientSession() as session:
-        url_to_fetch = subreddit_url
-        async with session.get(url_to_fetch) as response:
-            html_content = await response.text()
-            html_tree = fromstring(html_content)
-            for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
-                url = post.xpath("div/*/a")[0].get("href")
-                await asyncio.sleep(1)
-                if "https" not in url:
-                    try:
-                        async for item in scrap_post(
-                            f"https://reddit.com{url}"
-                        ):
-                            yield item
-                    except Exception:
-                        pass
+    
+    try:
+        async with aiohttp.ClientSession() as session:
+            url_to_fetch = subreddit_url
+            async with session.get(url_to_fetch, timeout=BASE_TIMEOUT) as response:
+                html_content = await response.text()
+                html_tree = fromstring(html_content)
+                for post in html_tree.xpath("//div[contains(@class, 'entry')]"):
+                    url = post.xpath("div/*/a")[0].get("href")
+                    await asyncio.sleep(1)
+                    if "https" not in url:
+                        try:
+                            async for item in scrap_post(
+                                f"https://reddit.com{url}"
+                            ):
+                                yield item
+                        except Exception:
+                            pass
+    except:
+        await session.close()
 
 
-DEFAULT_OLDNESS_SECONDS = 6000
-DEFAULT_MAXIMUM_ITEMS = 15
+DEFAULT_OLDNESS_SECONDS = 40000
+DEFAULT_MAXIMUM_ITEMS = 25
 DEFAULT_MIN_POST_LENGTH = 10
-
+DEFAULT_NUMBER_SUBREDDIT_ATTEMPTS = 2
 
 def read_parameters(parameters):
     # Check if parameters is not empty or None
@@ -430,13 +445,21 @@ def read_parameters(parameters):
             )
         except KeyError:
             min_post_length = DEFAULT_MIN_POST_LENGTH
+
+        try:
+            nb_subreddit_attempts = parameters.get(
+                "nb_subreddit_attempts", DEFAULT_NUMBER_SUBREDDIT_ATTEMPTS
+            )
+        except KeyError:
+            nb_subreddit_attempts = DEFAULT_NUMBER_SUBREDDIT_ATTEMPTS
     else:
         # Assign default values if parameters is empty or None
         max_oldness_seconds = DEFAULT_OLDNESS_SECONDS
         maximum_items_to_collect = DEFAULT_MAXIMUM_ITEMS
         min_post_length = DEFAULT_MIN_POST_LENGTH
+        nb_subreddit_attempts = DEFAULT_NUMBER_SUBREDDIT_ATTEMPTS
 
-    return max_oldness_seconds, maximum_items_to_collect, min_post_length
+    return max_oldness_seconds, maximum_items_to_collect, min_post_length, nb_subreddit_attempts
 
 
 async def query(parameters: dict) -> AsyncGenerator[Item, None]:
@@ -445,25 +468,28 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
         max_oldness_seconds,
         MAXIMUM_ITEMS_TO_COLLECT,
         min_post_length,
+        nb_subreddit_attempts
     ) = read_parameters(parameters)
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
-    url = await generate_url(**parameters["url_parameters"])
     yielded_items = 0  # Counter for the number of yielded items
-    logging.info("[Reddit] Scraping %s", url)
-    if "reddit.com" not in url:
-        raise ValueError(f"Not a Reddit URL {url}")
-    url_parameters = url.split("reddit.com")[1].split("/")[1:]
-    if "comments" in url_parameters:
-        async for result in scrap_post(url):
-            logging.info(f"[REDDIT] Found Reddit post: {result}")
-            yielded_items += 1
-            yield result
-            if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
-                break
-    else:
-        async for result in scrap_subreddit(url):
-            logging.info(f"[REDDIT] Found Reddit comment: {result}")
-            yielded_items += 1
-            yield result
-            if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
-                break
+
+    for i in range(nb_subreddit_attempts):
+        url = await generate_url(**parameters["url_parameters"])
+        logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url}")
+        if "reddit.com" not in url:
+            raise ValueError(f"Not a Reddit URL {url}")
+        url_parameters = url.split("reddit.com")[1].split("/")[1:]
+        if "comments" in url_parameters:
+            async for result in scrap_post(url):
+                logging.info(f"[REDDIT] Found Reddit post: {result}")
+                yielded_items += 1
+                yield result
+                if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
+                    break
+        else:
+            async for result in scrap_subreddit(url):
+                logging.info(f"[REDDIT] Found Reddit comment: {result}")
+                yielded_items += 1
+                yield result
+                if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
+                    break
