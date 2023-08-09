@@ -34,7 +34,7 @@ USER_AGENT_LIST = [
 ]
 
 global MAX_EXPIRATION_SECONDS
-MAX_EXPIRATION_SECONDS = 3600
+MAX_EXPIRATION_SECONDS = 80000
 BASE_TIMEOUT = 30
 
 subreddits = [
@@ -433,10 +433,10 @@ async def scrap_subreddit(subreddit_url: str) -> AsyncGenerator[Item, None]:
         await session.close()
 
 
-DEFAULT_OLDNESS_SECONDS = 40000
+DEFAULT_OLDNESS_SECONDS = 80000
 DEFAULT_MAXIMUM_ITEMS = 25
 DEFAULT_MIN_POST_LENGTH = 10
-DEFAULT_NUMBER_SUBREDDIT_ATTEMPTS = 2
+DEFAULT_NUMBER_SUBREDDIT_ATTEMPTS = 3
 
 def read_parameters(parameters):
     # Check if parameters is not empty or None
@@ -491,7 +491,7 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
 
     for i in range(nb_subreddit_attempts):
         url = await generate_url(**parameters["url_parameters"])
-        logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url}")
+        logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url} with max oldness of {max_oldness_seconds}")
         if "reddit.com" not in url:
             raise ValueError(f"Not a Reddit URL {url}")
         url_parameters = url.split("reddit.com")[1].split("/")[1:]
