@@ -289,7 +289,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
         await session.close()
 
 
-async def generate_url(autonomous_subreddit_choice=0.33, keyword: str = "BTC"):
+async def generate_url(autonomous_subreddit_choice=0.2, keyword: str = "BTC"):
     random_value = random.random()
     if random_value < autonomous_subreddit_choice:
         return await find_random_subreddit_for_keyword(keyword)
