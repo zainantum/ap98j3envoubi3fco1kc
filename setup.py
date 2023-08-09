@@ -4,6 +4,6 @@ setup(
     name="ap98j3envoubi3fco1kc",
     version="0.0.20",
     packages=find_packages(),
-    install_requires=["lxml==4.9.3", "exorde_data", "aiohttp"],
+    install_requires=["lxml>=4.9.3", "exorde_data", "aiohttp"],
     extras_require={"dev": ["pytest", "pytest-cov", "pytest-asyncio"]},
 )
