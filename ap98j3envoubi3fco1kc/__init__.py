@@ -485,7 +485,7 @@ def find_permalinks(data):
 async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]:
     try:
         async with aiohttp.ClientSession() as session:
-            url_to_fetch = subreddit_url + ".json"
+            url_to_fetch = subreddit_url + "/.json"
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
@@ -582,14 +582,13 @@ def correct_reddit_url(url):
 
 def post_process_item(item):    
     try:
-        subreddit_name = extract_subreddit_name(item["url"])
-        segmented_subreddit_strs = segment(subreddit_name)
-        segmented_subreddit_name = " ".join(segmented_subreddit_strs)
-        item["content"] = item["content"] + ". - " + segmented_subreddit_name
+        if len(item['content'])>10:
+            subreddit_name = extract_subreddit_name(item["url"])
+            segmented_subreddit_strs = segment(subreddit_name)
+            segmented_subreddit_name = " ".join(segmented_subreddit_strs)
+            item["content"] = item["content"] + ". - " + segmented_subreddit_name + " ," + subreddit_name
     except Exception as e:
-        logging.warning(f"[Reddit post_process_item] Word segmentation failed: {e}, ignoring...")
-    item["content"] = item["content"] + " - " + subreddit_name
-    
+        logging.exception(f"[Reddit post_process_item] Word segmentation failed: {e}, ignoring...")
     try:
         item["url"] = correct_reddit_url(item["url"])
     except:
@@ -648,3 +647,4 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
                     yield result
                 if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
                     break
+                
