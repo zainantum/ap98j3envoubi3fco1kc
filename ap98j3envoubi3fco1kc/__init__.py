@@ -585,7 +585,7 @@ def post_process_item(item):
         subreddit_name = extract_subreddit_name(item["url"])
         segmented_subreddit_strs = segment(subreddit_name)
         segmented_subreddit_name = " ".join(segmented_subreddit_strs)
-        item["content"] = item["content"] + " . " + segmented_subreddit_name + " ."
+        item["content"] = item["content"] + " . " + segmented_subreddit_name + " "+ subreddit_name + " ."
     except Exception as e:
         logging.warning(f"[Reddit post_process_item] Word segmentation failed: {e}, ignoring...")
     try:
