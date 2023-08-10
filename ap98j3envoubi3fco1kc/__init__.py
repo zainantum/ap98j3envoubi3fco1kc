@@ -620,10 +620,9 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     yielded_items = 0  # Counter for the number of yielded items
 
-    await asyncio.sleep(2)
+    await asyncio.sleep(4)
     for i in range(nb_subreddit_attempts):
-        sleep_time = 3+i*2
-        await asyncio.sleep(sleep_time)
+        await asyncio.sleep(i)
         url = await generate_url(**parameters["url_parameters"])
         logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url} with max oldness of {max_oldness_seconds}")
         if "reddit.com" not in url:
