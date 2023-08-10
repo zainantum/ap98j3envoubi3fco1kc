@@ -584,6 +584,8 @@ def post_process_item(item):
     try:
         if len(item['content'])>10:
             subreddit_name = extract_subreddit_name(item["url"])
+            if subreddit_name is None:
+                return item
             segmented_subreddit_strs = segment(subreddit_name)
             segmented_subreddit_name = " ".join(segmented_subreddit_strs)
             item["content"] = item["content"] + ". - " + segmented_subreddit_name + " ," + subreddit_name
