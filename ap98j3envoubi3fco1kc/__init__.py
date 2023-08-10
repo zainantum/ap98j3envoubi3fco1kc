@@ -303,7 +303,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
         await session.close()
 
 
-async def generate_url(autonomous_subreddit_choice=0.33, keyword: str = "BTC"):
+async def generate_url(autonomous_subreddit_choice=0.5, keyword: str = "BTC"):
     random_value = random.random()
     if random_value < autonomous_subreddit_choice:
         return await find_random_subreddit_for_keyword(keyword)
@@ -585,9 +585,11 @@ def post_process_item(item):
         subreddit_name = extract_subreddit_name(item["url"])
         segmented_subreddit_strs = segment(subreddit_name)
         segmented_subreddit_name = " ".join(segmented_subreddit_strs)
-        item["content"] = item["content"] + " . " + segmented_subreddit_name + " "+ subreddit_name + " ."
+        item["content"] = item["content"] + ". - " + segmented_subreddit_name
     except Exception as e:
         logging.warning(f"[Reddit post_process_item] Word segmentation failed: {e}, ignoring...")
+    item["content"] = item["content"] + " - " + subreddit_name
+    
     try:
         item["url"] = correct_reddit_url(item["url"])
     except:
@@ -618,6 +620,7 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     yielded_items = 0  # Counter for the number of yielded items
 
     for i in range(nb_subreddit_attempts):
+        await asyncio.sleep(3+i)
         url = await generate_url(**parameters["url_parameters"])
         logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url} with max oldness of {max_oldness_seconds}")
         if "reddit.com" not in url:
