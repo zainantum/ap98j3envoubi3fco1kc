@@ -35,6 +35,23 @@ SKIP_POST_PROBABILITY = 0.1
 BASE_TIMEOUT = 30
 
 subreddits = [
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
+    "r/all",
     "r/AlgorandOfficial",
     "r/almosthomeless",
     "r/altcoin",
