@@ -636,6 +636,7 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
                 url_to_fetch = url_to_fetch + "/new"
             url_to_fetch = url_to_fetch + "/.json"
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
+            asyncio.sleep(1)
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
@@ -769,9 +770,10 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     yielded_items = 0  # Counter for the number of yielded items
 
-    await asyncio.sleep(1)
+    
+    await asyncio.sleep(random.uniform(3, 15))
     for i in range(nb_subreddit_attempts):
-        await asyncio.sleep(1)
+        await asyncio.sleep(random.uniform(1, i))
         url = await generate_url(**parameters["url_parameters"])
         logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url} with max oldness of {max_oldness_seconds}")
         if "reddit.com" not in url:
@@ -799,4 +801,3 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
                     yield result
                 if yielded_items >= MAXIMUM_ITEMS_TO_COLLECT:
                     break
-                
