@@ -636,7 +636,7 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
                 url_to_fetch = url_to_fetch + "/new"
             url_to_fetch = url_to_fetch + "/.json"
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
-            asyncio.sleep(1)
+            await asyncio.sleep(1)
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
