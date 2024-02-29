@@ -775,6 +775,9 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     for i in range(nb_subreddit_attempts):
         await asyncio.sleep(random.uniform(1, i))
         url = await generate_url(**parameters["url_parameters"])
+        # if url ends with "/new/new/.json", replace it with "/new.json"
+        if url.endswith("/new/new/.json"):
+            url = url.replace("/new/new/.json", "/new.json")
         logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url} with max oldness of {max_oldness_seconds}")
         if "reddit.com" not in url:
             raise ValueError(f"Not a Reddit URL {url}")
