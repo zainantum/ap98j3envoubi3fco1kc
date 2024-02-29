@@ -635,6 +635,9 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
             if random.random() < 0.75:
                 url_to_fetch = url_to_fetch + "/new"
             url_to_fetch = url_to_fetch + "/.json"
+                
+            if url_to_fetch.endswith("/new/new/.json"):
+                url_to_fetch = url_to_fetch.replace("/new/new/.json", "/new.json")
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
             await asyncio.sleep(1)
             async with session.get(url_to_fetch, 
