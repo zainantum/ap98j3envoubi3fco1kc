@@ -418,16 +418,16 @@ subreddits_top_1000 = [
     "r/Calgary","r/furry","r/csMajors","r/Bedbugs","r/DBZDokkanBattle","r/mumbai","r/popheadscirclejerk","r/marvelmemes","r/Egypt","r/Topster",
 ]
 
-def load_env_variable(key, default_value=None, none_allowed=False):
+asycn def load_env_variable(key, default_value=None, none_allowed=False):
     v = os.getenv(key, default=default_value)
     if v is None and not none_allowed:
         raise RuntimeError(f"{key} returned {v} but this is not allowed!")
     return v
 
 
-def get_email(env):
+asycn def get_email(env):
     dotenv.load_dotenv(env, verbose=True)
-    default_var = load_env_variable("SCWEET_EMAIL", none_allowed=True)
+    default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
     return default_var
 
 async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
@@ -438,7 +438,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     logging.info("[Reddit] generating subreddit target URL.")
     try:
         async with aiohttp.ClientSession() as session:
-            reddit_session_cookie = get_email(".env") 
+            reddit_session_cookie = await get_email(".env") 
             # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
             session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(
@@ -569,7 +569,7 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
         async with aiohttp.ClientSession() as session:
             _url = url + ".json"
             logging.info(f"[Reddit] Scraping - getting {_url}")
-            reddit_session_cookie = get_email(".env") 
+            reddit_session_cookie = await get_email(".env")  
             # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
             session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(_url, 
@@ -618,7 +618,7 @@ async def scrap_subreddit_new_layout(subreddit_url: str) -> AsyncGenerator[Item,
         async with aiohttp.ClientSession() as session:
             url_to_fetch = subreddit_url
             logging.info("[Reddit] [NEW LAYOUT MODE] Opening: %s",url_to_fetch)
-            reddit_session_cookie = get_email(".env") 
+            reddit_session_cookie = await get_email(".env")  
             # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
             session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(url_to_fetch, 
@@ -663,7 +663,7 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
                 url_to_fetch = url_to_fetch.replace("/new/new/.json", "/new.json")
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
             await asyncio.sleep(1)
-            reddit_session_cookie = get_email(".env") 
+            reddit_session_cookie = await get_email(".env")  
             # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
             session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(url_to_fetch, 
