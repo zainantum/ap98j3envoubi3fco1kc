@@ -1,5 +1,7 @@
 import random
 import aiohttp
+import dotenv
+import os
 import asyncio
 from lxml import html
 from typing import AsyncGenerator
@@ -416,6 +418,18 @@ subreddits_top_1000 = [
     "r/Calgary","r/furry","r/csMajors","r/Bedbugs","r/DBZDokkanBattle","r/mumbai","r/popheadscirclejerk","r/marvelmemes","r/Egypt","r/Topster",
 ]
 
+def load_env_variable(key, default_value=None, none_allowed=False):
+    v = os.getenv(key, default=default_value)
+    if v is None and not none_allowed:
+        raise RuntimeError(f"{key} returned {v} but this is not allowed!")
+    return v
+
+
+def get_email(env):
+    dotenv.load_dotenv(env, verbose=True)
+    default_var = load_env_variable("SCWEET_EMAIL", none_allowed=True)
+    return default_var
+
 async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     """
     Generate a subreddit URL using the search tool with `keyword`.
@@ -424,6 +438,8 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     logging.info("[Reddit] generating subreddit target URL.")
     try:
         async with aiohttp.ClientSession() as session:
+            reddit_session_cookie = get_email(".env") 
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(
                 f"https://www.reddit.com/search/?q={keyword}&type=sr",
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},              
