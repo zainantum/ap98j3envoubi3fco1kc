@@ -439,6 +439,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     try:
         async with aiohttp.ClientSession() as session:
             reddit_session_cookie = get_email(".env") 
+            logging.debug("[Reddit] Try to log in ",reddit_session_cookie)
             session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(
                 f"https://www.reddit.com/search/?q={keyword}&type=sr",
