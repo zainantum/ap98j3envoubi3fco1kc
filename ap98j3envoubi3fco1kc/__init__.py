@@ -465,8 +465,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
         async with aiohttp.ClientSession() as session:
             reddit_session_cookie = await get_email(".env") 
             cookies = {'reddit_session': reddit_session_cookie}
-            response_url = URL('https://www.reddit.com')
-            session.cookie_jar.update_cookies(cookies, response_url=response_url)
+            session.cookie_jar.update_cookies(cookies, response_url='https://www.reddit.com')
             #session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
             async with session.get(
                 f"https://www.reddit.com/search/?q={keyword}&type=sr",
@@ -600,8 +599,7 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
             logging.info(f"[Reddit] Scraping - getting {_url}")
             reddit_session_cookie = await get_email(".env") 
             cookies = {'reddit_session': reddit_session_cookie}
-            response_url = URL('https://www.reddit.com')
-            session.cookie_jar.update_cookies(cookies, response_url=response_url)
+            session.cookie_jar.update_cookies(cookies, response_url='https://www.reddit.com')
             #session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
             async with session.get(_url, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
@@ -653,8 +651,7 @@ async def scrap_subreddit_new_layout(subreddit_url: str) -> AsyncGenerator[Item,
             logging.info("[Reddit] [NEW LAYOUT MODE] Opening: %s",url_to_fetch)
             reddit_session_cookie = await get_email(".env") 
             cookies = {'reddit_session': reddit_session_cookie}
-            response_url = URL('https://www.reddit.com')
-            session.cookie_jar.update_cookies(cookies, response_url=response_url)
+            session.cookie_jar.update_cookies(cookies, response_url='https://www.reddit.com')
             #session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
@@ -701,8 +698,7 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
             reddit_session_cookie = await get_email(".env") 
             cookies = {'reddit_session': reddit_session_cookie}
-            response_url = URL('https://www.reddit.com')
-            session.cookie_jar.update_cookies(cookies, response_url=response_url)
+            session.cookie_jar.update_cookies(cookies, response_url='https://www.reddit.com')
             await asyncio.sleep(2)
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
