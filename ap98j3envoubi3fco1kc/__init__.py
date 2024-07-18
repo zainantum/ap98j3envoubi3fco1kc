@@ -443,7 +443,8 @@ async def get_token(env):
 async def set_session_cookies(session):
     reddit_session_cookie = await get_email(".env")
     cookie = aiohttp.CookieJar()         
-    cookie.update_cookies({'reddit_session': reddit_session_cookie}, response_url='https://www.reddit.com')
+    response_url = aiohttp.URL('https://www.reddit.com')
+    cookie.update_cookies({'reddit_session': reddit_session_cookie}, response_url=response_url)
     session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
     # cookie_jar = aiohttp.CookieJar()
     # cookie_jar.update_cookies({'reddit_session': reddit_session_cookie}, response_url='https://www.reddit.com')
