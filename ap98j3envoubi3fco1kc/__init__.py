@@ -687,6 +687,8 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
+                logging.info(f"Response Status: {response.status}")
+                logging.info(f"Response Headers: {response.headers}")
                 # Parse JSON response
                 data = await response.json()
                 logging.info(f"Response JSON: {data}")
