@@ -418,17 +418,19 @@ subreddits_top_1000 = [
     "r/Calgary","r/furry","r/csMajors","r/Bedbugs","r/DBZDokkanBattle","r/mumbai","r/popheadscirclejerk","r/marvelmemes","r/Egypt","r/Topster",
 ]
 
-asycn def load_env_variable(key, default_value=None, none_allowed=False):
+
+async def load_env_variable(key, default_value=None, none_allowed=False):
     v = os.getenv(key, default=default_value)
     if v is None and not none_allowed:
         raise RuntimeError(f"{key} returned {v} but this is not allowed!")
     return v
 
 
-asycn def get_email(env):
+async def get_email(env):
     dotenv.load_dotenv(env, verbose=True)
     default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
     return default_var
+
 
 async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     """
