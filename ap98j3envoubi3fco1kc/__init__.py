@@ -683,6 +683,7 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
                 timeout=BASE_TIMEOUT) as response:
                 # Parse JSON response
                 data = await response.json()
+                logging.info(f"Response JSON: {data}")
                 # Find all "permalink" values
                                 
                 permalinks = list(find_permalinks(data))
