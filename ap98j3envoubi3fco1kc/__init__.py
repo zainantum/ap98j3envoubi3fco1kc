@@ -453,6 +453,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
                 timeout = BASE_TIMEOUT
             ) as response:
                 html_content = await response.text()
+                logging.info(f"Response Body: {html_content[:200]}...")
                 tree = html.fromstring(html_content)
                 urls = [
                     url
@@ -584,6 +585,7 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
                 response = await response.json()
+                logging.info(f"Response JSON: {response}")
                 [_post, comments] = response
                 try:
                     async for item in kind(_post):
@@ -634,7 +636,8 @@ async def scrap_subreddit_new_layout(subreddit_url: str) -> AsyncGenerator[Item,
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
-                html_content = await response.text()                    
+                html_content = await response.text()     
+                logging.info(f"Response Body: {html_content[:200]}...")
                 html_tree = fromstring(html_content)
                 for post in html_tree.xpath("//shreddit-post/@permalink"):
                     url = post
