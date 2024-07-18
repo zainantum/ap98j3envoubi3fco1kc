@@ -446,8 +446,7 @@ async def set_session_cookies(session):
     # cookie_jar = aiohttp.CookieJar()
     # cookie_jar.update_cookies({'reddit_session': reddit_session_cookie}, response_url='https://www.reddit.com')
     session.cookie_jar.update_cookies({
-            'reddit_session': reddit_session_cookie,
-            'token_v2': token_session_cookie
+            'reddit_session': reddit_session_cookie
         }, response_url='https://www.reddit.com')
     logger.info("[Reddit] Session cookies updated")
 
