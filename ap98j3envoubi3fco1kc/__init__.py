@@ -463,7 +463,11 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     logging.info("[Reddit] generating subreddit target URL.")
     try:
         async with aiohttp.ClientSession() as session:
-            await set_session_cookies(session)
+            reddit_session_cookie = await get_email(".env") 
+            # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
+            cookie = aiohttp.CookieJar()
+            cookie.update_cookies({'reddit_session': reddit_session_cookie}, response_url='https://www.reddit.com')
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
             async with session.get(
                 f"https://www.reddit.com/search/?q={keyword}&type=sr",
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},              
@@ -594,7 +598,11 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
         async with aiohttp.ClientSession() as session:
             _url = url + ".json"
             logging.info(f"[Reddit] Scraping - getting {_url}")
-            await set_session_cookies(session)
+            reddit_session_cookie = await get_email(".env") 
+            # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
+            cookie = aiohttp.CookieJar()
+            cookie.update_cookies({'reddit_session': reddit_session_cookie}, response_url='https://www.reddit.com')
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
             async with session.get(_url, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
@@ -643,7 +651,11 @@ async def scrap_subreddit_new_layout(subreddit_url: str) -> AsyncGenerator[Item,
         async with aiohttp.ClientSession() as session:
             url_to_fetch = subreddit_url
             logging.info("[Reddit] [NEW LAYOUT MODE] Opening: %s",url_to_fetch)
-            await set_session_cookies(session)
+            reddit_session_cookie = await get_email(".env") 
+            # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
+            cookie = aiohttp.CookieJar()
+            cookie.update_cookies({'reddit_session': reddit_session_cookie}, response_url='https://www.reddit.com')
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
@@ -687,7 +699,11 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
             if url_to_fetch.endswith("/new/new/.json"):
                 url_to_fetch = url_to_fetch.replace("/new/new/.json", "/new.json")
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
-            await set_session_cookies(session)
+            reddit_session_cookie = await get_email(".env") 
+            # logging.info("[Reddit] Try to log in ",reddit_session_cookie)
+            cookie = aiohttp.CookieJar()
+            cookie.update_cookies({'reddit_session': reddit_session_cookie}, response_url='https://www.reddit.com')
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie, 'domain': '.reddit.com'})
             await asyncio.sleep(2)
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
