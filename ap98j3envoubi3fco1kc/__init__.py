@@ -27,7 +27,7 @@ from wordsegment import load, segment
 load()
 
 USER_AGENT_LIST = [
-    'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36'
+    "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.114 Safari/537.36"
 ]
 
 global MAX_EXPIRATION_SECONDS
