@@ -439,7 +439,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
     try:
         async with aiohttp.ClientSession() as session:
             reddit_session_cookie = get_email(".env") 
-            logging.debug("[Reddit] Try to log in ",reddit_session_cookie)
+            logging.info("[Reddit] Try to log in ",reddit_session_cookie)
             session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(
                 f"https://www.reddit.com/search/?q={keyword}&type=sr",
@@ -569,6 +569,9 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
         async with aiohttp.ClientSession() as session:
             _url = url + ".json"
             logging.info(f"[Reddit] Scraping - getting {_url}")
+            reddit_session_cookie = get_email(".env") 
+            logging.info("[Reddit] Try to log in ",reddit_session_cookie)
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(_url, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
@@ -615,6 +618,9 @@ async def scrap_subreddit_new_layout(subreddit_url: str) -> AsyncGenerator[Item,
         async with aiohttp.ClientSession() as session:
             url_to_fetch = subreddit_url
             logging.info("[Reddit] [NEW LAYOUT MODE] Opening: %s",url_to_fetch)
+            reddit_session_cookie = get_email(".env") 
+            logging.info("[Reddit] Try to log in ",reddit_session_cookie)
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
@@ -657,6 +663,9 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
                 url_to_fetch = url_to_fetch.replace("/new/new/.json", "/new.json")
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
             await asyncio.sleep(1)
+            reddit_session_cookie = get_email(".env") 
+            logging.info("[Reddit] Try to log in ",reddit_session_cookie)
+            session.cookie_jar.update_cookies({'reddit_session': reddit_session_cookie})
             async with session.get(url_to_fetch, 
                 headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
