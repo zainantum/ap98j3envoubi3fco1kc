@@ -463,6 +463,7 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
                 result = f"https:/reddit.com{random.choice(urls)}/new"
                 return result
     finally:
+        logging.info("Session close")
         await session.close()
 
 
@@ -606,6 +607,7 @@ async def scrap_post(url: str) -> AsyncGenerator[Item, None]:
                 except:
                     logging.exception(f"An error occured on {_url}")
     finally:
+        logging.info("Session close")
         await session.close()
 
 
@@ -652,6 +654,7 @@ async def scrap_subreddit_new_layout(subreddit_url: str) -> AsyncGenerator[Item,
                     except Exception:
                         pass
     except:
+        logging.info("Session close")
         await session.close()
 
 def find_permalinks(data):
@@ -703,6 +706,7 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
                         logging.exception(f"[Reddit] [JSON MODE] Error detected")
 
     except:
+        logging.info("Session close")
         await session.close()
 
 
