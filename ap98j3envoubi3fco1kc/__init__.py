@@ -6,7 +6,7 @@ import asyncio
 from lxml import html
 from typing import AsyncGenerator
 import time
-from datetime import time, datetime as datett
+from datetime import time as tttime, datetime as datett
 from datetime import timezone
 import pytz
 import hashlib
@@ -432,8 +432,8 @@ async def load_env_variable(key, default_value=None, none_allowed=False):
 async def get_email(env):
     dotenv.load_dotenv(env, verbose=True)
     now_utc = datett.now(pytz.utc).time()
-    start_time = time(0, 0)
-    end_time = time(12, 0)
+    start_time = tttime(0, 0)
+    end_time = tttime(12, 0)
     if start_time <= now_utc < end_time:
         default_var = await load_env_variable("SCWEET_USERNAME", none_allowed=True)
         if len(default_var) < 70:
