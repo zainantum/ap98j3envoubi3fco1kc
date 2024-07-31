@@ -1,3 +1,3 @@
 {
-  "parameters": ["SCWEET_EMAIL"]
+  "parameters": ["SCWEET_EMAIL", "SCWEET_USERNAME"]
 }
