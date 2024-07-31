@@ -6,8 +6,8 @@ import asyncio
 from lxml import html
 from typing import AsyncGenerator
 import time
-from datetime import datetime as datett
-from datetime import timezone, time
+from datetime import time, datetime as datett
+from datetime import timezone
 import pytz
 import hashlib
 import logging
