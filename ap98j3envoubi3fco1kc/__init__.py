@@ -7,7 +7,8 @@ from lxml import html
 from typing import AsyncGenerator
 import time
 from datetime import datetime as datett
-from datetime import timezone
+from datetime import timezone, time
+import pytz
 import hashlib
 import logging
 from lxml.html import fromstring
@@ -430,7 +431,16 @@ async def load_env_variable(key, default_value=None, none_allowed=False):
 
 async def get_email(env):
     dotenv.load_dotenv(env, verbose=True)
-    default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
+    now_utc = datetime.now(pytz.utc).time()
+    start_time = time(0, 0)
+    end_time = time(12, 0)
+    if start_time <= now_utc < end_time:
+        default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
+    else:
+        default_var = await load_env_variable("SCWEET_USERNAME", none_allowed=True)
+        if len(default_var) < 70:
+            default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
+    
     return default_var
 
 
