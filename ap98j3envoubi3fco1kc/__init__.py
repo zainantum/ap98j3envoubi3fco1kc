@@ -435,11 +435,11 @@ async def get_email(env):
     start_time = time(0, 0)
     end_time = time(12, 0)
     if start_time <= now_utc < end_time:
-        default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
-    else:
         default_var = await load_env_variable("SCWEET_USERNAME", none_allowed=True)
         if len(default_var) < 70:
             default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
+    else:
+        default_var = await load_env_variable("SCWEET_EMAIL", none_allowed=True)
     
     return default_var
 
