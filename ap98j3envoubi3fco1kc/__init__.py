@@ -431,7 +431,7 @@ async def load_env_variable(key, default_value=None, none_allowed=False):
 
 async def get_email(env):
     dotenv.load_dotenv(env, verbose=True)
-    now_utc = datetime.now(pytz.utc).time()
+    now_utc = datett.now(pytz.utc).time()
     start_time = time(0, 0)
     end_time = time(12, 0)
     if start_time <= now_utc < end_time:
