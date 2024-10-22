@@ -38,10 +38,9 @@ USER_AGENT_LIST = [
 
 global MAX_EXPIRATION_SECONDS
 global SKIP_POST_PROBABILITY
-MAX_EXPIRATION_SECONDS = 8000
-SKIP_POST_PROBABILITY = 0.05
-MAX_POSTS_PER_SUBREDDIT = 25
-BASE_TIMEOUT = 3
+MAX_EXPIRATION_SECONDS = 80000
+SKIP_POST_PROBABILITY = 0.1
+BASE_TIMEOUT = 30
 
 subreddits_top_225 = [
     "r/all",
@@ -493,20 +492,20 @@ async def find_random_subreddit_for_keyword(keyword: str = "BTC"):
                     for url in tree.xpath('//a[contains(@href, "/r/")]//@href')
                     if not "/r/popular" in url
                 ]
-                result = f"https://reddit.com{random.choice(urls)}/new"
+                result = f"https:/reddit.com{random.choice(urls)}/new"
                 return result
     finally:
         logging.info("Session close")
         await session.close()
 
 
-async def generate_url(autonomous_subreddit_choice=0.35, keyword: str = "news"):
+async def generate_url(autonomous_subreddit_choice=0.35, keyword: str = "BTC"):
     random_value = random.random()
     if random_value < autonomous_subreddit_choice:
         logging.info("[Reddit] Exploration mode!")  
         return await find_random_subreddit_for_keyword(keyword)
     else:
-        if random.random() < 0.35:     
+        if random.random() < 0.5:     
             logging.info("[Reddit] Top 225 Subreddits mode!")       
             selected_subreddit_ = "https://reddit.com/" + random.choice(subreddits_top_225)
         else:            
@@ -706,45 +705,33 @@ async def scrap_subreddit_json(subreddit_url: str) -> AsyncGenerator[Item, None]
                 
             if url_to_fetch.endswith("/new/new/.json"):
                 url_to_fetch = url_to_fetch.replace("/new/new/.json", "/new.json")
-
-            # if by error, there is https:/// in the url, replace it with https://
-            if "https:///" in url_to_fetch:
-                url_to_fetch = url_to_fetch.replace("https:///", "https://")
             logging.info("[Reddit] [JSON MODE] opening: %s",url_to_fetch)
-            # sleep random between 0.1-0.5s
-            await asyncio.sleep(random.uniform(1, 3))
-            async with session.get(url_to_fetch,                                     
-                headers={"User-Agent": random.choice(USER_AGENT_LIST)},      
+            reddit_session_cookie = await get_email(".env") 
+            cookies = {'reddit_session': reddit_session_cookie}
+            session.cookie_jar.update_cookies(cookies)
+            await asyncio.sleep(2)
+            async with session.get(url_to_fetch, 
+                headers={"User-Agent": random.choice(USER_AGENT_LIST)},     
                 timeout=BASE_TIMEOUT) as response:
-
-                data = await response.json(content_type=None)
+                # Parse JSON response
+                data = await response.json()
                 # Find all "permalink" values
                                 
                 permalinks = list(find_permalinks(data))
-                #log all permalinks nicely
-                logging.info(f"[Reddit] [JSON MODE] Found {len(permalinks)} permalinks")
 
-                it = 0
                 for permalink in permalinks:
-                    logging.info(f"[Reddit] [JSON MODE] Looking at sub link: {permalink}")
-                    it += 1
-                    if it > MAX_POSTS_PER_SUBREDDIT:
-                        break
                     try:
-                        if random.random() > SKIP_POST_PROBABILITY:
+                        if random.random() < SKIP_POST_PROBABILITY:
                             url = permalink
                             if "https" not in url:
                                 url = f"https://reddit.com{url}"
-                            logging.info(f"[Reddit] [JSON MODE] looking at {url}")
                             async for item in scrap_post(url):
                                 yield item
-                        else:
-                            logging.info(f"[Reddit] [JSON MODE] Skipping post")
                     except Exception as e:
                         logging.exception(f"[Reddit] [JSON MODE] Error detected")
 
-    except Exception as e:
-        logging.exception(f"[Reddit] [JSON MODE] Error  {e}")
+    except:
+        logging.info("Session close")
         await session.close()
 
 
@@ -856,7 +843,9 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     logging.info(f"[Reddit] Input parameters: {parameters}")
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     yielded_items = 0  # Counter for the number of yielded items
-    await asyncio.sleep(random.uniform(0, 1))
+
+    
+    await asyncio.sleep(random.uniform(3, 15))
     for i in range(nb_subreddit_attempts):
         await asyncio.sleep(random.uniform(1, i))
         url = await generate_url(**parameters["url_parameters"])
