@@ -812,7 +812,7 @@ def post_process_item(item):
                 return item
             segmented_subreddit_strs = segment(subreddit_name)
             segmented_subreddit_name = " ".join(segmented_subreddit_strs)
-            item["content"] = item["content"] + ". - " + segmented_subreddit_name + " ," + subreddit_name
+            item["content"] = item["content"] # + ". - " + segmented_subreddit_name + " ," + subreddit_name
     except Exception as e:
         logging.exception(f"[Reddit post_process_item] Word segmentation failed: {e}, ignoring...")
     try:
@@ -843,9 +843,7 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
     logging.info(f"[Reddit] Input parameters: {parameters}")
     MAX_EXPIRATION_SECONDS = max_oldness_seconds
     yielded_items = 0  # Counter for the number of yielded items
-
-    
-    await asyncio.sleep(random.uniform(3, 15))
+    await asyncio.sleep(random.uniform(0, 1))
     for i in range(nb_subreddit_attempts):
         await asyncio.sleep(random.uniform(1, i))
         url = await generate_url(**parameters["url_parameters"])
