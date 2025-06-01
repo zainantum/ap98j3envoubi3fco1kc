@@ -1984,6 +1984,9 @@ async def query(parameters: dict) -> AsyncGenerator[Item, None]:
         logging.info(f"[Reddit] Attempt {(i+1)}/{nb_subreddit_attempts} Scraping {url} with max oldness of {max_oldness_seconds}")
         if "reddit.com" not in url:
             raise ValueError(f"Not a Reddit URL {url}")
+        if url == '':
+            raise ValueError("URL is empty")
+            
         url_parameters = url.split("reddit.com")[1].split("/")[1:]
         if "comments" in url_parameters:
             socks_port = random.choice(TOR_PORTS)
